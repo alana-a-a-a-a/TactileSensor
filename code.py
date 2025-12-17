@@ -24,7 +24,7 @@ tare = [0]*num_sens
 def sensorpressures(s):
     for idx, s in enumerate(s):
         s.read()  # Triggers sensor measurement, updates compensation
-        pressures[idx] = s.pressure()*0.1 # units: kPa=mbar*0.1
+        pressures[idx] = s.pressure()*10 # units: kPa
     return pressures
 tare = sensorpressures(sensors)
 
