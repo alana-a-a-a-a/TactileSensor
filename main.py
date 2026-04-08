@@ -6,17 +6,10 @@ import time
 import logging
 
 
-## A: import additions
-import serial
-import time
-PORT = "COM4" # change to your QT Py port
-BAUD = 115200
-ser = serial.Serial(PORT, BAUD, timeout=1)
-##
-
 import threading
 
 from pybravo import BravoDriver, PacketID, DeviceID, Packet
+import continuouspressures
 
 which_joint = DeviceID.LINEAR_JAWS
 data_file = None
@@ -102,6 +95,10 @@ def example_joint_current_cb(packet: Packet) -> None:
 
     pass
 
+def wp_file(pline) -> None:
+    data_file.write(f'{time.time()},{pline}\n')
+    pass
+
 def example_joint_request_cb(packet: Packet) -> None:
     """Read the joint Mode from the Bravo 7.
 
@@ -113,6 +110,7 @@ def example_joint_request_cb(packet: Packet) -> None:
     #     f"The current joint position of joint {packet.device_id} is {position}"
     # )
     pass
+
 
 
 if __name__ == "__main__":
@@ -136,13 +134,10 @@ if __name__ == "__main__":
     bravo.attach_callback(PacketID.POSITION, example_joint_positions_cb)
     bravo.attach_callback(PacketID.CURRENT, example_joint_current_cb)
     bravo.attach_callback(PacketID.VELOCITY, example_joint_velocity_cb)
-    
+
+
 
     
-    ##A: write to data file here
-    sensor_pressures = ser.readline().decode().strip()
-    data_file.write(f'{time.time()}, SENSORS,{sensor_pressures}\n')
-
 
 
     bravo.attach_callback(PacketID.MODE, example_joint_modes_cb)
@@ -157,6 +152,27 @@ if __name__ == "__main__":
 
     # Send the request
     bravo.send(request)
+
+
+    ##WHERE DO I PUT THIS
+    #def worker()
+    #while True
+    pdata = continuouspressures()
+    
+    t = threading(target = worker, daemon=True)
+    t.start()
+    def worker() ->None:
+        while True:
+            pline = pdata.value()
+            wp_file(pline)
+            dt = 0.1
+            time.sleep(dt)
+
+    # t = threading.Thred(target = worker)
+    # somehow set t = true 
+    # t.start()
+    # while True: 
+    #time.sleep(1) // this keeps the thred going if need be idk how this works
 
     done = False
     
